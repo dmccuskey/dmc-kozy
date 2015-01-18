@@ -83,24 +83,21 @@ end
 
 
 --====================================================================--
--- DMC Library Config
---====================================================================--
+--== Configuration
 
-local dmc_lib_data, dmc_lib_info, dmc_lib_location
 
--- boot dmc_library with boot script or
+local dmc_lib_data, dmc_lib_info
+
+-- boot dmc_corona with boot script or
 -- setup basic defaults if it doesn't exist
 --
-if false == pcall( function() require( "dmc_corona_boot" ) end ) then
+if false == pcall( function() require( 'dmc_corona_boot' ) end ) then
 	_G.__dmc_corona = {
 		dmc_corona={},
 	}
 end
 
 dmc_lib_data = _G.__dmc_corona
-dmc_lib_info = dmc_lib_data.dmc_corona
-dmc_lib_location = dmc_lib_info.location
-
 
 
 
