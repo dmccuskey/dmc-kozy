@@ -13,7 +13,9 @@ module_config = {
 		"files": [
 			"dmc_kozy.lua"
 		],
-		"requires": []
+		"requires": [
+			"dmc-corona-boot"
+		]
 	},
 	"examples": {
 		"dir": "examples",
