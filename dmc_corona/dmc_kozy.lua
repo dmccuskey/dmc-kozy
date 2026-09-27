@@ -1,7 +1,7 @@
 --====================================================================--
 -- dmc_kozy.lua
 --
--- Documentation: http://docs.davidmccuskey.com/
+-- Documentation: https://github.com/dmccuskey/dmc-kozy
 --====================================================================--
 
 --[[
@@ -39,7 +39,7 @@ SOFTWARE.
 
 -- Semantic Versioning Specification: http://semver.org/
 
-local VERSION = "1.0.1"
+local VERSION = "1.0.2"
 
 
 
@@ -265,8 +265,9 @@ local function addSetAnchor( o )
 				y = args[3]
 			end
 
-			obj.anchorX = x
-			obj.anchorY = y
+			-- a missing value keeps the current one (nil crashes Solar2D)
+			obj.anchorX = x or obj.anchorX
+			obj.anchorY = y or obj.anchorY
 		end
 		return f
 	end
@@ -544,22 +545,6 @@ setmetatable( Native, { __index=Native.super } )
 
 
 --== Corona Native API ==--
-
-function Native.newText( ... )
-	-- print( 'dmc_kozy.newText' )
-
-	local o = Native.super.newText( ... )
-
-	if dkd.activate_anchor then
-		addSetAnchor( o )
-	end
-	if dkd.activate_fillcolor then
-		addSetFillColor( o )
-	end
-
-	return o
-end
-
 
 function Native.newTextBox( ... )
 	-- print( 'dmc_kozy.newTextBox' )
