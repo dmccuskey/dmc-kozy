@@ -15,7 +15,7 @@ rect:setReferencePoint( display.TopLeftReferencePoint )
 
 ## Features
 
-- `setFillColor()` and `setStrokeColor()` take 0-255 values, hex strings (`'#FFB422'`) and gradients with 0-255 colors
+- `setFillColor()` and `setStrokeColor()` take 0-255 values, hex strings (`'#FFB422'`) and gradients with 0-255 colors; so does `setTextColor()` on native text fields
 - `setAnchor( x, y )`, and `setReferencePoint()` with the nine Graphics 1.0 reference points (`display.TopLeftReferencePoint`, ...)
 - Local by default: only the files that require dmc-kozy see the change, so other libraries keep Solar2D's `display` and `native`
 - Each change can be turned off in `dmc_corona.cfg`
@@ -94,7 +94,7 @@ To update, copy `dmc_corona_boot.lua` and `dmc_corona/` again from the newer ver
 local display, native = require( 'dmc_corona.dmc_kozy' )()
 ```
 
-The module returns a function; call it to get the two tables. Anything dmc-kozy doesn't change falls through to Solar2D's own `display` and `native`, so `display.contentWidth` and `native.systemFont` work as usual.
+Call the module to get the two tables. It also holds them as `.display` and `.native`, and its version as `.VERSION`. Anything dmc-kozy doesn't change falls through to Solar2D's own `display` and `native`, so `display.contentWidth` and `native.systemFont` work as usual.
 
 ### Objects and Their Methods
 
@@ -102,31 +102,36 @@ These constructors return Solar2D's object with methods added:
 
 | constructor | `setAnchor()`, `setReferencePoint()` | `setFillColor()` | `setStrokeColor()` |
 |---|---|---|---|
-| `display.newCircle`, `newRect`, `newRoundedRect` | yes | yes | yes |
+| `display.newCircle`, `newPolygon`, `newRect`, `newRoundedRect` | yes | yes | yes |
 | `display.newImage`, `newImageRect`, `newText` | yes | yes | |
-| `display.newLine`, `newPolygon` | yes | | yes |
+| `display.newLine` | yes | | yes |
 | `display.newGroup`, `newContainer`, `newSprite` | yes | | |
-| `native.newTextField`, `newTextBox`, `newWebView` | yes | see [Known Issues](#known-issues) | |
+| `native.newTextField`, `newTextBox` | yes | `setTextColor()` instead | |
+| `native.newWebView` | yes | | |
+
+Solar2D's own method is kept on the object with an underscore: `object:_setFillColor( 1, 0, 0 )` takes 0-1 values. A constructor that returns `nil`, such as `display.newImage()` for a missing file, returns `nil` here too.
 
 Objects made any other way, including with Solar2D's own `display` in a file that doesn't require dmc-kozy, are unchanged.
 
-### object:setFillColor( ... ), object:setStrokeColor( ... )
+### object:setFillColor( ... ), object:setStrokeColor( ... ), field:setTextColor( ... )
 
 The color, in one of these forms:
 
 | form | example | notes |
 |---|---|---|
 | gray | `( 128 )` | 0-255 |
+| gray, alpha | `( 128, 0.5 )` | alpha as below |
 | red, green, blue | `( 255, 180, 34 )` | 0-255 |
 | red, green, blue, alpha | `( 0, 128, 255, 0.5 )` | alpha 0-1; 0-255 with `ACTIVATE_ZEROONE_ALPHA` off |
 | hex string | `( '#FFB422' )` | `#RRGGBB`, no alpha |
-| gradient | `{ type='gradient', color1={ 255, 180, 34 }, color2={ 138, 43, 226 }, direction='down' }` | colors 0-255, alpha optional |
+| gradient | `{ type='gradient', color1={ 255, 180, 34 }, color2={ 138, 43, 226 }, direction='down' }` | colors 0-255, alpha optional; your table is left as it is |
+| other paint | `{ type='image', filename='wood.png' }` | passed to Solar2D unchanged |
 
-Solar2D's own 0-1 values don't work on these objects: `( 1, 0, 0 )` is nearly black.
+Solar2D's own 0-1 values don't work on these objects: `( 1, 0, 0 )` is nearly black. Anything else raises an error, such as a color name (`'red'`: use [dmc-kolor](https://github.com/dmccuskey/dmc-kolor) for names), a short hex string (`'#F00'`) or a string among the numbers.
 
 ### object:setAnchor( x [, y] ), object:setReferencePoint( point )
 
-Set `anchorX` and `anchorY`, from 0 to 1. `setAnchor()` takes two numbers or a table, `{ x, y }`; a value left out keeps its current one. `setReferencePoint()` is the same method, for use with the reference points:
+Set `anchorX` and `anchorY`, from 0 to 1. `setAnchor()` takes two numbers or a table, `{ x, y }`; a value left out keeps its current one. `setReferencePoint()` takes one of the reference points; Solar2D's own `display.CenterReferencePoint` (and the others) work too. Anything else raises an error, including `nil` from a misspelled name:
 
 | `display.` | anchor | `display.` | anchor | `display.` | anchor |
 |---|---|---|---|---|---|
@@ -142,29 +147,35 @@ Solar2D's own, except that an object from [DMC-Corona-UI](https://github.com/dmc
 
 ## Configuration
 
-The `[DMC_KOZY]` section of `dmc_corona.cfg`; all settings are read once, when dmc-kozy is first required. Booleans need the `:BOOL` type, `MAKE_GLOBAL:BOOL = true`: without it the value is the string `"false"`, which counts as true. For the file format, see [dmc-corona-boot Configuration](https://github.com/dmccuskey/dmc-corona-boot/blob/master/docs/configuration.md).
+The `[DMC_KOZY]` section of `dmc_corona.cfg`; all settings are read once, when dmc-kozy is first required. All are booleans: `MAKE_GLOBAL:BOOL = true`, or `MAKE_GLOBAL = true` without the type. For the file format, see [dmc-corona-boot Configuration](https://github.com/dmccuskey/dmc-corona-boot/blob/master/docs/configuration.md).
 
 | setting | type | default | effect |
 |---|---|---|---|
 | `MAKE_GLOBAL` | bool | `false` | replace the global `display` and `native` with dmc-kozy's, for every file and every other library in the app. Use with care: other code may expect Solar2D's own |
 | `ACTIVATE_ZEROONE_ALPHA` | bool | `true` | alpha is 0-1; `false`: 0-255, like the colors |
 | `ACTIVATE_ANCHOR` | bool | `true` | add `setAnchor()` and `setReferencePoint()` |
-| `ACTIVATE_FILLCOLOR` | bool | `true` | add the 0-255 `setFillColor()` |
+| `ACTIVATE_FILLCOLOR` | bool | `true` | add the 0-255 `setFillColor()`, and `setTextColor()` on native text fields |
 | `ACTIVATE_STROKECOLOR` | bool | `true` | add the 0-255 `setStrokeColor()` |
-| `PRINT_WARNINGS` | bool | `true` | not used |
 
 ## Known Issues
 
-- Gray with alpha, `setFillColor( 128, 0.5 )`, ignores the alpha (it's always 1).
-- A color name, `setFillColor( 'red' )`, prints `ERROR dmc_kolor: named color not found` and gives white: dmc-kozy has no named colors. Use [dmc-kolor](https://github.com/dmccuskey/dmc-kolor) for names.
-- A gradient's table is changed in place: using the same table twice translates its colors twice.
-- `display.newImage()` and `newImageRect()` raise an error for a missing file, instead of returning `nil` as Solar2D does.
-- `setFillColor()` on `native.newTextField()`, `newTextBox()` and `newWebView()` objects raises an error: text fields have `setTextColor()`, which dmc-kozy doesn't change, and web views have no color.
-- `newPolygon()` gets a 0-255 `setStrokeColor()` but keeps Solar2D's own 0-1 `setFillColor()`.
-- Solar2D's own `display.CenterReferencePoint` (and the others) are ignored by `setReferencePoint()`: use dmc-kozy's `display`.
-- It leaves the globals `_extend`, `createClosure` and `t` behind.
+None known. The changes in each version are in the [CHANGELOG](CHANGELOG.md).
 
-Version 1.0.2 fixed a crash: `setAnchor()` with one value crashed the Simulator. It also dropped the wrapper for `native.newText()`, which Solar2D doesn't have.
+## Development
+
+Only `dmc_corona/dmc_kozy.lua` is written in this repository; it needs no other module. `dmc_corona_boot.lua` is a generated copy from [dmc-corona-boot](https://github.com/dmccuskey/dmc-corona-boot); fix it there, then rebuild. The copy is made by Snakemake from sibling checkouts (`../dmc-corona-boot`, `../DMC-Corona-Library` for the shared rules). From this repository's root folder:
+
+```sh
+snakemake --cores 1 build_all
+```
+
+The unit tests run in plain Lua 5.1, with stand-ins for Solar2D's `display` and `native`:
+
+```sh
+tests/run_unit.sh
+```
+
+They need Lua 5.1 and dkjson; `LUA=` names the interpreter. The Quick Start is the check that it works in Solar2D.
 
 ## License
 
