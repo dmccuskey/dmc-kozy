@@ -54,9 +54,20 @@ _G.display = {
 	end,
 }
 for _, name in ipairs{ 'newCircle', 'newContainer', 'newGroup',
-	'newImageRect', 'newLine', 'newPolygon', 'newRect', 'newRoundedRect',
+	'newImageRect', 'newPolygon', 'newRect', 'newRoundedRect',
 	'newSprite', 'newText' } do
 	display[ name ] = newObject
+end
+
+-- Solar2D ignores setting a line's color methods the usual way
+display.newLine = function( ... )
+	local o = newObject( ... )
+	local own = { setStrokeColor=o.setStrokeColor, setColor=o.setStrokeColor }
+	o.setStrokeColor, o.setFillColor, o.setTextColor = nil, nil, nil
+	return setmetatable( o, {
+		__index=own,
+		__newindex=function( t, k, v ) if not own[ k ] then rawset( t, k, v ) end end,
+	} )
 end
 display.newImageRect = display.newImage
 
@@ -113,7 +124,7 @@ end
 
 function test_module()
 	local Kozy = load( {} )
-	assert_equal( '1.1.0', Kozy.VERSION )
+	assert_equal( '1.1.1', Kozy.VERSION )
 	local d, n = Kozy()
 	assert_equal( 'DMC Kozy Display', d.NAME )
 	assert_equal( 'DMC Kozy Native', n.NAME )
@@ -319,4 +330,13 @@ function test_config_types()
 	assert_nil( o.setAnchor )
 	o:setFillColor( 0, 0, 0, 51 )
 	assert_color( { 0, 0, 0, 0.2 }, lastCall( o ) )
+end
+
+-- Solar2D ignored the new method, so a line kept its 0-1 setStrokeColor()
+function test_line_stroke_color()
+	local d = load( {} )()
+	local line = d.newLine()
+	line:setStrokeColor( 0, 128, 255 )
+	assert_equal( 'setStrokeColor', lastCall( line ).name )
+	assert_color( { 0, 0.502, 1, 1 }, lastCall( line ) )
 end

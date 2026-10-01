@@ -41,7 +41,7 @@ SOFTWARE.
 
 -- Semantic Versioning Specification: http://semver.org/
 
-local VERSION = "1.1.0"
+local VERSION = "1.1.1"
 
 
 
@@ -228,15 +228,16 @@ end
 -- addColorMethod()
 -- replace the object's method with one taking Graphics 1.0 colors;
 -- Solar2D's own is kept as _<name>
+-- rawset: Solar2D ignores setting a line's color methods the usual way
 --
 local function addColorMethod( o, name )
 	local original = o[ name ]
-	o[ '_'..name ] = original -- save original version
-	o[ name ] = function( _, ... )
+	rawset( o, '_'..name, original ) -- save original version
+	rawset( o, name, function( _, ... )
 		local color, err = translateColor( ... )
 		if not color then error( "dmc_kozy: "..err, 2 ) end
 		return original( o, unpack( color ) )
-	end
+	end )
 end
 
 

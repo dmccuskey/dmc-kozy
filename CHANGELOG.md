@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.1 (2026-10-01)
+
+### Changed
+
+- Lines get the 0-255 `setStrokeColor()`. Solar2D ignores setting a line's color methods the usual way, so lines kept Solar2D's own 0-1 method; the module now stores its methods with `rawset()`.
+
 ## 1.1.0 (2026-09-29)
 
 ### Changed
